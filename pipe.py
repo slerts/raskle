@@ -29,7 +29,7 @@ def get_team(team_id):
     :param team_id: team id number to grab from endpoint
     :return: json object from endpoint
     """
-    url = baseURL + '/teams/' + team_id
+    url = baseURL + '/teams/' + str(team_id)
     return get_data(url)
 
 
@@ -41,7 +41,7 @@ def get_person(person_id):
     :param person_id: person if number to grab from endpoint
     :return: json object from endpoint
     """
-    url = baseURL + '/people/' + person_id
+    url = baseURL + '/people/' + str(person_id)
     return get_data(url)
 
 
@@ -53,7 +53,7 @@ def get_division(division_id):
     :param division_id: division id number to grab from endpoint
     :return: json object from endpoint
     """
-    url = baseURL + '/divisions/' + division_id
+    url = baseURL + '/divisions/' + str(division_id)
     return get_data(url)
 
 
@@ -65,7 +65,7 @@ def get_conference(conference_id):
     :param conference_id: division id number to grab from endpoint
     :return: json object from endpoint
     """
-    url = baseURL + '/conferences/' + conference_id
+    url = baseURL + '/conferences/' + str(conference_id)
     return get_data(url)
 
 
@@ -77,15 +77,15 @@ def get_franchise(franchise_id):
     :param franchise_id: division id number to grab from endpoint
     :return: json object from endpoint
     """
-    url = baseURL + '/franchises/' + franchise_id
+    url = baseURL + '/franchises/' + str(franchise_id)
     return get_data(url)
 
 
-def get_games(game_id):
+def get_game(game_id):
     """
     gets the game object for the id parameter from the live game feed endpoint
     :param game_id: game id number to grab from endpoint
     :return: json object from endpoint
     """
-    url = baseURL + '/game/' + game_id + '/feed/live'
+    url = baseURL + '/game/' + str(game_id) + '/feed/live'
     return get_data(url)
