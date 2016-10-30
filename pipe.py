@@ -289,6 +289,6 @@ def get_team_stats():
 
             divs[div.attrib.get('Heading')] = teams
 
-        confs[conf.attrib.get('Name')] = divs
+        confs[conf.attrib.get('Name')] = {'division': divs}
 
-    return {'stats': confs}
+    return {'conferences': confs}
