@@ -259,11 +259,13 @@ def get_team_stats():
     root = ET.fromstring(resp)
 
     # convert XML to json before passing back to api
-    confs = {}
+    confs = []
     for conf in root.findall("Conference"):
-        divs = {}
+        conf_obj = {}
+        divs = []
 
         for div in conf.findall("StatsSection"):
+            div_obj = {}
             teams = []
 
             for squad in div.findall("Standing"):
@@ -287,8 +289,12 @@ def get_team_stats():
                     "streak": stats2.get("Stat3")
                 })
 
-            divs[div.attrib.get('Heading')] = teams
+            div_obj['div_id'] = div.attrib.get('Heading')
+            div_obj['teams'] = teams
+            divs.append(div_obj)
 
-        confs[conf.attrib.get('Name')] = {'division': divs}
+        conf_obj['conf_id'] = conf.attrib.get('Name')
+        conf_obj['divisions'] = divs
+        confs.append(conf_obj)
 
     return {'conferences': confs}
