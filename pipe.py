@@ -291,4 +291,4 @@ def get_team_stats():
 
         confs[conf.attrib.get('Name')] = divs
 
-    return json.dumps({'stats': confs})
+    return {'stats': confs}
