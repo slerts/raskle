@@ -52,6 +52,7 @@ def add_player_stats(team_abbr, years, season_id):
     :return: inserted object id
     """
     pstats = pipe.get_playerstats_by_team(team_abbr, years, season_id)
+    pstats['team'] = team_abbr
     return pstats_coll.insert_one(pstats).inserted_id
 
 
@@ -63,4 +64,4 @@ def add_team_stats():
     """
     tstats = pipe.get_team_stats()
     tstats['timestamp'] = datetime.datetime.utcnow()
-    return tstats.insert_one(tstats).inserted_id
+    return tstats_coll.insert_one(tstats).inserted_id
