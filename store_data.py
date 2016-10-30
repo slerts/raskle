@@ -7,6 +7,7 @@ email: nickseelert@gmail.com
 """
 
 import pipe
+import datetime
 from pymongo import MongoClient
 
 client = MongoClient('localhost', 27017)
@@ -61,4 +62,5 @@ def add_team_stats():
     :return: inserted object id
     """
     tstats = pipe.get_team_stats()
+    tstats['timestamp'] = datetime.datetime.utcnow()
     return tstats.insert_one(tstats).inserted_id
