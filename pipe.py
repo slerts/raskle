@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 """
 pipe.py - pipes data from NHL stats api endpoints
-author: Nick Seelert
-email: nickseelert@gmail.com
+author: Nick Seelert <nickseelert@gmail.com>
 """
 
 import json

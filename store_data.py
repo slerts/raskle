@@ -2,8 +2,7 @@
 """
 store_data.py - adds data to mongoDB
 
-author: Nick Seelert
-email: nickseelert@gmail.com
+author: Nick Seelert <nickseelert@gmail.com>
 """
 
 import pipe
