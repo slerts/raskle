@@ -90,23 +90,23 @@ c.execute("""CREATE TABLE pp_stats (
 
 c.execute("""CREATE TABLE rosters (
     game_id INT,
-    player_id INT,
+    pid INT,
     team_id INT,
     scratched VARCHAR(10),
     PRIMARY KEY (game_id, player_id),
     FOREIGN KEY (game_id) REFERENCES games(game_id)
-    FOREIGN KEY (player_id) REFERENCES people(pid),
+    FOREIGN KEY (pid) REFERENCES people(pid),
     FOREIGN KEY (team_id) REFERENCES teams(team_id))""")
 
 c.execute("""CREATE TABLE time_on_ice (
     game_id INT,
-    player_id INT,
+    pid INT,
     toi TIME,
     even_toi TIME,
     sh_toi TIME,
     PRIMARY KEY (game_id, player_id),
     FOREIGN KEY (game_id) REFERENCES games(game_id),
-    FOREIGN KEY (player_id) REFERENCES people(pid))""")
+    FOREIGN KEY (pid) REFERENCES people(pid))""")
 
 c.execute("""CREATE TABLE plays (
     game_id INT,
@@ -194,11 +194,11 @@ c.execute("""CREATE TABLE faceoffs (
 c.execute("""CREATE TABLE poss_changes (
     game_id INT,
     event_idx INT,
-    player_id INT,
+    pid INT,
     change_type CHAR(8),
     PRIMARY KEY(game_id, event_idx),
     FOREIGN KEY (game_id, event_idx) REFERENCES plays(game_id, event_idx),
-    FOREIGN KEY (player_pid) REFERENCES people(pid))""")
+    FOREIGN KEY (pid) REFERENCES people(pid))""")
 
 c.execute("""CREATE TABLE hits (
     game_id INT,

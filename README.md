@@ -1,7 +1,26 @@
 # Raskle
 
-## An API and analytics project for NHL stats.
+## Backend data processor and REST API for NHL stats
 
-Uses the unofficial and unsupported NHL.com stats endpoints to pipe data into mongoDB collections. 
+#### MongoDB cache
 
-Long term goal is to collect enough data to run some machine learning analytics for predictions.  
+ * Stores data dumps from the unofficial and unsupported NHL.com stats 
+ endpoints that power game center
+ 
+ * Collections: games, people, teams, divisions, conferences
+
+#### MySQL db
+  
+  * Data from local cache will be processed and stored in an SQL db
+  
+  * Initial Data Tables: positions, people, conference, division, teams, games, 
+  pp_stats, rosters, time_on_ice, plays, shots, missed_shots, 
+  blocked_shots, goals, penalties, faceoffs, poss_changes, hits, 
+  stoppages
+  
+  * ToDo Tables: rolling stats over each season
+    * ie. what are the totals for each stat prior to each game?
+  
+#### API
+
+  * Endpoints: conferences, divisions, people, games
