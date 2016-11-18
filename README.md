@@ -18,9 +18,9 @@
   blocked_shots, goals, penalties, faceoffs, poss_changes, hits, 
   stoppages
   
-  * ToDo Tables: rolling stats over each season
+  * __TODO__ Tables: rolling stats over each season
     * ie. what are the totals for each stat prior to each game?
   
 #### API
 
-  * Endpoints: conferences, divisions, people, games
+  * __TODO__ Endpoints: conferences, divisions, people, games
