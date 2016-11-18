@@ -5,9 +5,10 @@ init_db.py - initializes the db to the current date when starting out
 author: Nick Seelert <nickseelert@gmail.com>
 """
 
-import store_data
-import pipe
 import datetime
+
+import pipe
+from mirror import store_data
 
 season_start = datetime.date(2016, 10, 12)
 today = datetime.date.today()
