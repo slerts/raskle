@@ -8,29 +8,19 @@ events of interest:
     even strength: shots, blocked shots, missed shots, goals, sv pct %
     other: pp %, pk %, shooting %
 
-author: Nick Seelert <nickseelert@gmail.com>
+author: Nick Seelert < nickseelert _at_ gmail >
 """
 
 import pipe
-import MySQLdb
-from datetime import time, datetime, timedelta, tzinfo
+import sql_connect as db
 
-
-# database credentials
-dbname = 'nhl_stats'
-dbuser = 'mysql'
-dbpwd = None
-dbhost = 'localhost'
-
-# connect to db and create cursor c
-db = MySQLdb.connect(host=dbhost, user=dbuser, passwd=dbpwd, db=dbname)
-c = db.cursor()
+sql = db.get_cursor()
 
 def convert_time(time_string):
     """
     reformats the time_string to MySQL DATETIME format
     :param time_string: date and time string
-    :return:
+    :return: formatted string
     """
     dt_array = time_string.split('T')
     return dt_array[0] + " " + dt_array[1][:-1]
@@ -39,9 +29,8 @@ def convert_time(time_string):
 def extract_events(game_id):
     """
     extracts required collections from the game object param and passes to proper function
-
-    :param game_id: json game object
-    :return:
+    :param game_id: unique game id
+    :return: none
     """
     game = pipe.get_game(game_id)
     gamedata = game.get('gameData')
@@ -58,6 +47,14 @@ def extract_events(game_id):
 
 
 def store_gamedata(game_id, gamedata, decisions, linescore):
+    """
+    extracts gamedata and stores to sql db
+    :param game_id: unique game id
+    :param gamedata: dict of basic game info
+    :param decisions: dict for 3 stars info
+    :param linescore: dict contains hasShootout boolean
+    :return: none
+    """
     start_date_time = convert_time(gamedata.get('gameData').get('datetime').get('dateTime'))
     end_date_time = convert_time(gamedata.get('gameData').get('datetime').get('endDateTime'))
     home_team_id = gamedata.get('gameData').get('teams').get('home').get('id')
@@ -67,33 +64,43 @@ def store_gamedata(game_id, gamedata, decisions, linescore):
     first_star_pid = decisions.get('firstStar').get('id')
     second_star_pid = decisions.get('secondStar').get('id')
     third_star_pid = decisions.get('thirdStar').get('id')
-    c.execute(
-        """INSERT INTO games (game_id, start_date_time, end_date_time, home_team_id, away_team_id, arena,
+    sql.execute("""INSERT INTO games (game_id, start_date_time, end_date_time, home_team_id, away_team_id, arena,
         has_shootout, first_star_pid, second_star_pid, third_star_pid)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-        (game_id, start_date_time, end_date_time, home_team_id, away_team_id, arena,
-         has_shootout, first_star_pid, second_star_pid, third_star_pid))
+                (game_id, start_date_time, end_date_time, home_team_id, away_team_id, arena,
+                 has_shootout, first_star_pid, second_star_pid, third_star_pid))
 
 
 def store_ppstats(game_id, teams):
+    """
+    extracts powerplay data from teams dict. eventually this will be able to be calculated directly from
+    play by play data sql db
+    :param game_id: unique game id
+    :param teams: dict containing team info for game
+    :return: None
+    """
     home_pp_pct = teams.get('home').get('teamStats').get('teamSkaterStats').get('powerPlayPercentage')
     home_pp_goals = teams.get('home').get('teamStats').get('teamSkaterStats').get('powerPlayGoals')
     home_pp_opp = teams.get('home').get('teamStats').get('teamSkaterStats').get('powerPlayOpportunities')
     away_pp_pct = teams.get('away').get('teamStats').get('teamSkaterStats').get('powerPlayPercentage')
     away_pp_goals = teams.get('away').get('teamStats').get('teamSkaterStats').get('powerPlayGoals')
     away_pp_opp = teams.get('away').get('teamStats').get('teamSkaterStats').get('powerPlayOpportunities')
-    c.execute(
-        """INSERT INTO pp_stats (game_id, home_pp_pct, home_pp_goals, home_pp_opp, away_pp_pct, away_pp_goals, away_pp_opp)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-        (game_id, home_pp_pct, home_pp_goals, home_pp_opp, away_pp_pct, away_pp_goals, away_pp_opp))
+
+    sql.execute("""INSERT INTO pp_stats (game_id, home_pp_pct, home_pp_goals, home_pp_opp, away_pp_pct, away_pp_goals,
+    away_pp_opp) VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                (game_id, home_pp_pct, home_pp_goals, home_pp_opp, away_pp_pct, away_pp_goals, away_pp_opp))
 
 
 def store_rosters(game_id, teams):
-
+    """
+    extracts the rosters for each team and stores in sql db
+    :param game_id: unique game id
+    :param teams: dict containing team info for game
+    :return: none
+    """
     def store_player(player_id, team_id, scratched):
-        c.execute(
-            """INSERT INTO rosters (game_id, player_id, team_id, scratched)
-            VALUES (%s, %s, %s, %s)""", (game_id, player_id, team_id, scratched))
+        sql.execute("""INSERT INTO rosters (game_id, player_id, team_id, scratched) VALUES (%s, %s, %s, %s)""",
+                    (game_id, player_id, team_id, scratched))
 
     for team in teams:
         team_id = team.get('team').get('id')
@@ -109,15 +116,20 @@ def store_rosters(game_id, teams):
 
 
 def store_toi(game_id, teams):
-
+    """
+    extracts each players time on ice info and stores in sql db
+    :param game_id: unique game id
+    :param teams: dict containing team info for game
+    :return: none
+    """
     def store_player(player):
         player_id = player.get('person').get('id')
         toi = "00:" + player.get('stats').get('skaterStats').get('timeOnIce')
         even_toi = "00:" + player.get('stats').get('skaterStats').get('evenTimeOnIce')
         pp_toi = "00:" + player.get('stats').get('skaterStats').get('powerPlayTimeOnIce')
         sh_toi = "00:" + player.get('stats').get('skaterStats').get('shortHandedTimeOnIce')
-        c.execute(
-            """INSERT INTO time_on_ice (game_id, player_id, toi, even_toi, pp_toi, sh_toi)
+
+        sql.execute("""INSERT INTO time_on_ice (game_id, player_id, toi, even_toi, pp_toi, sh_toi)
             VALUES (%s, %s, %s, %s, %s, %s)""", (game_id, player_id, toi, even_toi, pp_toi, sh_toi))
 
     home_team = teams.get('home').get('players')
@@ -132,10 +144,10 @@ def store_toi(game_id, teams):
 
 def store_plays(game_id, pbp):
     """
-    saves each play from json object to proper table in SQL db
-
-        :param pbp: play by play collection passed from extract_events()
-        :return:
+    saves each play from a game to proper table in SQL db
+    :param game_id: unique game id
+    :param pbp: play by play collection passed from extract_events()
+    :return: None
     """
 
     for play in pbp:
@@ -150,11 +162,12 @@ def store_plays(game_id, pbp):
         home_score = play.get('about').get('goals').get('home')
         away_score = play.get('about').get('goals').get('away')
 
-        c.execute("""INSERT INTO shots (game_id, date_time, event_idx, team_id, period, period_time,
+        sql.execute("""INSERT INTO shots (game_id, date_time, event_idx, team_id, period, period_time,
         x_coord, y_coord, home_score, away_score) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-        (game_id, date_time, event_idx, period, period_time, x_coord, y_coord, home_score, away_score, team_id))
+                    (game_id, date_time, event_idx, period, period_time, x_coord, y_coord, home_score,
+                     away_score, team_id))
 
-        # record the play to the appropriate table
+        # long if-else to record specific details of the play to the appropriate table
         if play_type == 'SHOT':
 
             for player in play.get('players'):
@@ -165,13 +178,13 @@ def store_plays(game_id, pbp):
 
             shot_type = play.get('result').get('secondaryType')
 
-            c.execute("""INSERT INTO shots (game_id, event_idx, shooter_pid, goalie_pid, shot_type)
+            sql.execute("""INSERT INTO shots (game_id, event_idx, shooter_pid, goalie_pid, shot_type)
             VALUES (%s, %s, %s, %s, %s)""", (game_id, event_idx, shooter_pid, goalie_pid, shot_type))
 
         elif play_type == 'MISSED_SHOT':
             shooter_player_pid = player.get('player').get('id')
 
-            c.execute("""INSERT INTO missed_shots (game_id, event_idx, shooter_player_pid)
+            sql.execute("""INSERT INTO missed_shots (game_id, event_idx, shooter_player_pid)
             VALUES (%s, %s, %s)""", (game_id, event_idx, shooter_player_pid))
 
         elif play_type == 'BLOCKED_SHOT':
@@ -181,7 +194,7 @@ def store_plays(game_id, pbp):
                 else:
                     blocker_player_pid = player.get('player').get('id')
 
-            c.execute("""INSERT INTO blocked_shots (game_id, event_idx, shooter_player_pid, blocker_player_pid)
+            sql.execute("""INSERT INTO blocked_shots (game_id, event_idx, shooter_player_pid, blocker_player_pid)
             VALUES (%s, %s, %s, %s)""", (game_id, event_idx, shooter_player_pid, blocker_player_pid))
 
         elif play_type == 'GOAL':
@@ -205,10 +218,10 @@ def store_plays(game_id, pbp):
                 elif player.get('playerType') == "Goalie":
                     goalie_pid = player.get('player').get('id')
 
-                c.execute("""INSERT INTO goals (game_id, event_idx, scorer_pid, assist_pid1, assist_pid2, goalie_pid,
+                sql.execute("""INSERT INTO goals (game_id, event_idx, scorer_pid, assist_pid1, assist_pid2, goalie_pid,
                 shot_type, empty_net, game_winner) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                (game_id, event_idx, scorer_pid, assist_pid1, assist_pid2, goalie_pid, shot_type, empty_net,
-                 game_winner))
+                            (game_id, event_idx, scorer_pid, assist_pid1, assist_pid2, goalie_pid, shot_type,
+                             empty_net, game_winner))
 
         elif play_type == 'PENALTY':
             for player in play.get('players'):
@@ -221,9 +234,10 @@ def store_plays(game_id, pbp):
             penalty_minutes = play.get('result').get('penaltyMinutes')
             penalty_severity = play.get('result').get('penaltySeverity')
 
-            c.execute("""INSERT INTO penalties (game_id, event_idx, penalty_on_pid, drawn_by_pid, penalty_type,
+            sql.execute("""INSERT INTO penalties (game_id, event_idx, penalty_on_pid, drawn_by_pid, penalty_type,
             penalty_minutes, penalty_severity) VALUES (%s, %s, %s, %s, %s, %s, %s)""",
-            (game_id, event_idx, penalty_on_pid, drawn_by_pid, penalty_type, penalty_minutes, penalty_severity))
+                        (game_id, event_idx, penalty_on_pid, drawn_by_pid, penalty_type, penalty_minutes,
+                         penalty_severity))
 
         elif play_type == 'FACEOFF':
             for player in play.get('players'):
@@ -232,8 +246,8 @@ def store_plays(game_id, pbp):
                 else:
                     loser_pid = player.get('player').get('id')
 
-            c.execute("""INSERT INTO faceoff (game_id, event_idx, winner_pid, loser_pid) VALUES (%s, %s, %s, %s)""",
-            (game_id, event_idx, winner_pid, loser_pid))
+            sql.execute("""INSERT INTO faceoff (game_id, event_idx, winner_pid, loser_pid) VALUES (%s, %s, %s, %s)""",
+                        (game_id, event_idx, winner_pid, loser_pid))
 
         elif play_type == 'GIVEAWAY' or play_type == 'TAKEAWAY':
             player_id = play.get('players')[0].get('player').get('id')
@@ -243,7 +257,7 @@ def store_plays(game_id, pbp):
             else:
                 change_type = 'Giveaway'
 
-            c.execute("""INSERT INTO poss_changes (game_id, event_idx, player_id, change_type)
+            sql.execute("""INSERT INTO poss_changes (game_id, event_idx, player_id, change_type)
             VALUES (%s, %s, %s, %s)""", (game_id, event_idx, player_id, change_type))
 
         elif play_type == 'HIT':
@@ -253,11 +267,11 @@ def store_plays(game_id, pbp):
                 else:
                     hittee_pid = player.get('player').get('id')
 
-            c.execute("""INSERT INTO faceoff (game_id, event_idx, hitter_pid, loser_pid)
-            VALUES (%s, %s, %s, %s)""", (game_id, event_idx, hitter_pid, hittee_pid))
+            sql.execute("""INSERT INTO faceoff (game_id, event_idx, hitter_pid, loser_pid) VALUES (%s, %s, %s, %s)""",
+                        (game_id, event_idx, hitter_pid, hittee_pid))
 
         elif play_type == 'STOP':
             description = play.get('result').get('description')
 
-            c.execute("""INSERT INTO faceoff (game_id, event_idx, description)
-            VALUES (%s, %s, %s)""", (game_id, event_idx, description))
+            sql.execute("""INSERT INTO faceoff (game_id, event_idx, description) VALUES (%s, %s, %s)""",
+                        (game_id, event_idx, description))

@@ -1,0 +1,31 @@
+{ positions : [{
+  "code": "C",
+  "name": "Center",
+  "pos_type": "Forward",
+  "abbreviation": "C"
+  },
+  {
+    "code": "L",
+    "name": "Left Wing",
+    "pos_type": "Forward",
+    "abbreviation": "LW"
+  },
+  {
+    "code": "R",
+    "name": "Right Wing",
+    "pos_type": "Forward",
+    "abbreviation": "RW"
+  },
+  {
+    "code": "D",
+    "name": "Defenseman",
+    "pos_type": "Defenseman",
+    "abbreviation": "D"
+  },
+  {
+    "code": "G",
+    "name": "Goalie",
+    "pos_type": "Goalie",
+    "abbreviation": "G"
+  }]
+}

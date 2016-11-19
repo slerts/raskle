@@ -1,27 +1,20 @@
 #!/usr/bin/python3
+"""
+simple script to create all tables required -- assumes db already created
+"""
+import sql_connect as db
 
-import MySQLdb
-
-
-# database credentials
-dbname = 'nhl_stats'
-dbuser = 'mysql'
-dbpwd = None
-dbhost = 'localhost'
-
-# connect to db and create cursor c
-db = MySQLdb.connect(host=dbhost, user=dbuser, passwd=dbpwd, db=dbname)
-c = db.cursor()
+sql = db.get_cursor()
 
 # create tables
-c.execute("""CREATE TABLE positions (
+sql.execute("""CREATE TABLE positions (
     position_code VARCHAR(3),
     name VARCHAR(16),
-    type VARCHAR(16),
+    pos_type VARCHAR(16),
     abbreviation VARCHAR(3),
     PRIMARY KEY(position_code))""")
 
-c.execute("""CREATE TABLE people (
+sql.execute("""CREATE TABLE people (
     pid INT,
     first_name VARCHAR(32),
     last_name VARCHAR(64),
@@ -34,13 +27,13 @@ c.execute("""CREATE TABLE people (
     PRIMARY KEY (player_id),
     FOREIGN KEY (position_code) REFERENCES positions(position_code))""")
 
-c.execute("""CREATE TABLE conferences (
+sql.execute("""CREATE TABLE conferences (
     conference_id INT,
     name VARCHAR(64),
     abbreviation CHAR(30),
     PRIMARY KEY (conference_id)""")
 
-c.execute("""CREATE TABLE divisions (
+sql.execute("""CREATE TABLE divisions (
     division_id INT,
     name VARCHAR(64),
     abbreviation CHAR(30),
@@ -48,9 +41,9 @@ c.execute("""CREATE TABLE divisions (
     PRIMARY KEY(division_id),
     FOREIGN KEY (conference_id) REFERENCES conferences(conference_id))""")
 
-c.execute("""CREATE TABLE teams (
+sql.execute("""CREATE TABLE teams (
     team_id INT,
-    full_name VARCHAR(64),
+    location VARCHAR(32),
     abbreviation CHAR(3),
     team_name VARCHAR(32),
     division_id INT,
@@ -59,7 +52,7 @@ c.execute("""CREATE TABLE teams (
     FOREIGN KEY (division_id) REFERENCES divisions(division_id),
     FOREIGN KEY (conference_id) REFERENCES conferences(conference_id))""")
 
-c.execute("""CREATE TABLE games (
+sql.execute("""CREATE TABLE games (
     game_id INT NOT NULL,
     start_date_time DATETIME,
     end_date_time DATETIME,
@@ -77,7 +70,7 @@ c.execute("""CREATE TABLE games (
     FOREIGN KEY (second_star_pid) REFERENCES people(pid),
     FOREIGN KEY (third_star_pid) REFERENCES people(pid)""")
 
-c.execute("""CREATE TABLE pp_stats (
+sql.execute("""CREATE TABLE pp_stats (
     game_id INT,
     home_pp_pct REAL,
     home_pp_goals INT,
@@ -88,7 +81,7 @@ c.execute("""CREATE TABLE pp_stats (
     PRIMARY KEY (game_id),
     FOREIGN KEY (game_id) REFERENCES games(game_id))""")
 
-c.execute("""CREATE TABLE rosters (
+sql.execute("""CREATE TABLE rosters (
     game_id INT,
     pid INT,
     team_id INT,
@@ -98,7 +91,7 @@ c.execute("""CREATE TABLE rosters (
     FOREIGN KEY (pid) REFERENCES people(pid),
     FOREIGN KEY (team_id) REFERENCES teams(team_id))""")
 
-c.execute("""CREATE TABLE time_on_ice (
+sql.execute("""CREATE TABLE time_on_ice (
     game_id INT,
     pid INT,
     toi TIME,
@@ -108,7 +101,7 @@ c.execute("""CREATE TABLE time_on_ice (
     FOREIGN KEY (game_id) REFERENCES games(game_id),
     FOREIGN KEY (pid) REFERENCES people(pid))""")
 
-c.execute("""CREATE TABLE plays (
+sql.execute("""CREATE TABLE plays (
     game_id INT,
     date_time DATETIME,
     event_idx INT,
@@ -122,7 +115,7 @@ c.execute("""CREATE TABLE plays (
     PRIMARY KEY (game_id, event_idx),
     FOREIGN KEY (game_id) REFERENCES games(game_id))""")
 
-c.execute("""CREATE TABLE shots (
+sql.execute("""CREATE TABLE shots (
     game_id INT,
     event_idx INT,
     shooter_pid INT,
@@ -133,7 +126,7 @@ c.execute("""CREATE TABLE shots (
     FOREIGN KEY (shooter_pid) REFERENCES people(pid),
     FOREIGN KEY (goalie_pid) REFERENCES people(pid))""")
 
-c.execute("""CREATE TABLE missed_shots (
+sql.execute("""CREATE TABLE missed_shots (
     game_id INT,
     event_idx INT,
     shooter_pid INT,
@@ -141,7 +134,7 @@ c.execute("""CREATE TABLE missed_shots (
     FOREIGN KEY (game_id, event_idx) REFERENCES plays(game_id, event_idx),
     FOREIGN KEY (shooter_pid) REFERENCES people(pid))""")
 
-c.execute("""CREATE TABLE blocked_shots (
+sql.execute("""CREATE TABLE blocked_shots (
     game_id INT,
     event_idx INT,
     shooter_pid INT,
@@ -151,7 +144,7 @@ c.execute("""CREATE TABLE blocked_shots (
     FOREIGN KEY (shooter_pid) REFERENCES people(pid),
     FOREIGN KEY (blocker_pid) REFERENCES people(pid))""")
 
-c.execute("""CREATE TABLE goals (
+sql.execute("""CREATE TABLE goals (
     game_id INT,
     event_idx INT,
     shooter_pid INT,
@@ -168,7 +161,7 @@ c.execute("""CREATE TABLE goals (
     FOREIGN KEY (assist_2_pid) REFERENCES people(pid),
     FOREIGN KEY (goalie_pid) REFERENCES people(pid))""")
 
-c.execute("""CREATE TABLE penalties (
+sql.execute("""CREATE TABLE penalties (
     game_id INT,
     event_idx INT,
     penalty_on_pid INT,
@@ -181,7 +174,7 @@ c.execute("""CREATE TABLE penalties (
     FOREIGN KEY (penalty_on_pid) REFERENCES people(pid),
     FOREIGN KEY (drawn_by_pid) REFERENCES people(pid))""")
 
-c.execute("""CREATE TABLE faceoffs (
+sql.execute("""CREATE TABLE faceoffs (
     game_id INT,
     event_idx INT,
     winner_pid INT,
@@ -191,7 +184,7 @@ c.execute("""CREATE TABLE faceoffs (
     FOREIGN KEY (winner_pid) REFERENCES people(pid),
     FOREIGN KEY (loser_pid) REFERENCES people(pid))""")
 
-c.execute("""CREATE TABLE poss_changes (
+sql.execute("""CREATE TABLE poss_changes (
     game_id INT,
     event_idx INT,
     pid INT,
@@ -200,7 +193,7 @@ c.execute("""CREATE TABLE poss_changes (
     FOREIGN KEY (game_id, event_idx) REFERENCES plays(game_id, event_idx),
     FOREIGN KEY (pid) REFERENCES people(pid))""")
 
-c.execute("""CREATE TABLE hits (
+sql.execute("""CREATE TABLE hits (
     game_id INT,
     event_idx INT,
     hitter_pid INT,
@@ -210,7 +203,7 @@ c.execute("""CREATE TABLE hits (
     FOREIGN KEY (hitter_pid) REFERENCES people(pid),
     FOREIGN KEY (hittee_pid) REFERENCES people(pid))""")
 
-c.execute("""CREATE TABLE stoppages (
+sql.execute("""CREATE TABLE stoppages (
     game_id INT,
     event_idx INT,
     description VARCHAR(200),
