@@ -6,8 +6,8 @@ author: Nick Seelert <nickseelert@gmail.com>
 """
 
 # import datetime
-from mirror import mongo_connect as mc
-from mirror import pipe
+from cache import mongo_connect as mc
+from cache import pipe
 
 
 games_coll = mc.db.games

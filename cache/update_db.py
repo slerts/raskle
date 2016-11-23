@@ -10,7 +10,7 @@ author: Nick Seelert <nickseelert@gmail.com>
 
 import datetime
 
-from mirror import store_data, pipe
+from cache import store_data, pipe
 
 with open('gameday.txt') as a_file:
     gameday_array = a_file.read().split("-")
