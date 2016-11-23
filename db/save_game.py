@@ -11,8 +11,8 @@ events of interest:
 author: Nick Seelert < nickseelert _at_ gmail >
 """
 
-import pipe
-import sql_connect as db
+from db import sql_connect as db
+from db import parser
 
 sql = db.get_cursor()
 
@@ -32,7 +32,7 @@ def extract_events(game_id):
     :param game_id: unique game id
     :return: none
     """
-    game = pipe.get_game(game_id)
+    game = parser.get_game(game_id)
     gamedata = game.get('gameData')
     decisions = game.get('liveData').get('decisions')
     linescore = game.get('liveData').get('linescore')

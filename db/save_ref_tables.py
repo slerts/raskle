@@ -7,8 +7,8 @@ positions, people, teams, divisions, conferences
 author: Nick Seelert <nickseelert@gmail.com>
 """
 
-import pipe
-import sql_connect as db
+from db import sql_connect as db
+from db import parser
 
 sql = db.get_cursor()
 
@@ -25,7 +25,7 @@ def store_positions(positions):
 
 
 def store_player(pid):
-    player = pipe.get_person(pid)
+    player = parser.get_person(pid)
     details = player.get('people')[0]
     first_name = details.get('firstName')
     last_name = details.get('lastName')
@@ -43,7 +43,7 @@ def store_player(pid):
 
 
 def store_conference(conference_id):
-    conference = pipe.get_conference(conference_id).get('conferences')[0]
+    conference = parser.get_conference(conference_id).get('conferences')[0]
     name = conference.get('name')
     abbreviation = conference.get('abbreviation')
 
@@ -53,7 +53,7 @@ def store_conference(conference_id):
 
 
 def store_division(division_id):
-    division = pipe.get_division(division_id).get('divisions')[0]
+    division = parser.get_division(division_id).get('divisions')[0]
     name = division.get('name')
     abbreviation = division.get('abbreviation')
     conference_id = division.get('conference').get('id')
@@ -64,7 +64,7 @@ def store_division(division_id):
 
 
 def store_team(team_id):
-    team = pipe.get_team(team_id).get('teams')
+    team = parser.get_team(team_id).get('teams')
     location = team.get('locationName')
     abbreviation = team.get('abbreviation')
     team_name = team.get('Bruins')

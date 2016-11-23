@@ -2,7 +2,7 @@
 """
 simple script to create all tables required -- assumes db already created
 """
-import sql_connect as db
+from db import sql_connect as db
 
 sql = db.get_cursor()
 

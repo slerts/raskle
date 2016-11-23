@@ -227,14 +227,11 @@ def get_ll_so():
 
 
 ### NHL Live endpoint ###
-# used to get game ids for each day
-# DOESN'T WORK: END POINT DOESN'T SERVE PROPER JSON OBJECT
-
 def get_game_ids(day):
     """
     gets all game ids for a specific day
-    can't use general get_data(url) function because endpoint doesn't return a valid json object
-    need to slice out part of string before returning
+    can't use general get_data(url) function because endpoint serves jsonp
+    need to slice out json object before returning
 
     :param day: gameday requested (YYYY-MM-DD)
     :return: json object from endpoint
